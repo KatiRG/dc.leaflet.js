@@ -33,7 +33,7 @@
 </head>
 <body>
 
-<div id="holder">
+<!--<div id="holder">
   <div id="demo1">
     <h2>Markers with clustering, popups and single selection</h2>
     <i>Renewable energy plants in Bulgaria in 2012</i>
@@ -46,7 +46,7 @@
     <i>Renewable energy plants in Bulgaria in 2012</i>
     <div class="map"></div>
     <div class="pie"></div>
-  </div>
+  </div> -->
 
   <div id="demo3">
     <h2>Le choropleth</h2>
@@ -70,43 +70,43 @@
 
   /*     Markers      */
 
-  d3.tsv("demo1.tsv", function(data) {
-      drawMarkerSelect(data);
-      drawMarkerArea(data);
-  });
+  // d3.tsv("demo1.tsv", function(data) {
+  //     drawMarkerSelect(data);
+  //     drawMarkerArea(data);
+  // });
 
-  function drawMarkerSelect(data) {
-      var xf = crossfilter(data);
-      var groupname = "marker-select";
-      var facilities = xf.dimension(function(d) { return d.geo; });
-      var facilitiesGroup = facilities.group().reduceCount();
+  // function drawMarkerSelect(data) {
+  //     var xf = crossfilter(data);
+  //     var groupname = "marker-select";
+  //     var facilities = xf.dimension(function(d) { return d.geo; });
+  //     var facilitiesGroup = facilities.group().reduceCount();
 
-      var marker = dc_leaflet.markerChart("#demo1 .map",groupname)
-          .dimension(facilities)
-          .group(facilitiesGroup)
-          .width(600)
-          .height(400)
-          .center([42.69,25.42])
-          .zoom(7)
-          .cluster(true);
+  //     var marker = dc_leaflet.markerChart("#demo1 .map",groupname)
+  //         .dimension(facilities)
+  //         .group(facilitiesGroup)
+  //         .width(600)
+  //         .height(400)
+  //         .center([42.69,25.42])
+  //         .zoom(7)
+  //         .cluster(true);
 
-      var types = xf.dimension(function(d) { return d.type; });
-      var typesGroup = types.group().reduceCount();
+  //     var types = xf.dimension(function(d) { return d.type; });
+  //     var typesGroup = types.group().reduceCount();
 
-      var pie = dc.pieChart("#demo1 .pie",groupname)
-          .dimension(types)
-          .group(typesGroup)
-          .width(200)
-          .height(200)
-          .renderLabel(true)
-          .renderTitle(true)
-          .ordering(function (p) {
-              return -p.value;
-          });
+  //     var pie = dc.pieChart("#demo1 .pie",groupname)
+  //         .dimension(types)
+  //         .group(typesGroup)
+  //         .width(200)
+  //         .height(200)
+  //         .renderLabel(true)
+  //         .renderTitle(true)
+  //         .ordering(function (p) {
+  //             return -p.value;
+  //         });
 
-      dc.renderAll(groupname);
-      return {marker: marker, pie: pie};
-  }
+  //     dc.renderAll(groupname);
+  //     return {marker: marker, pie: pie};
+  // }
 
   function drawMarkerArea(data) {
       var xf = crossfilter(data);
