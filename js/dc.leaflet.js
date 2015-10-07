@@ -49,10 +49,56 @@ dc_leaflet.leafletBase = function(_chart) {
         return L.map(child_div.node(),_mapOptions);
     };
 
+    //######################
+    var _legend = L.control({position: 'bottomleft'});  
+    var numCharts = 0;
+    var minValue, maxValue, palette, colorLength, delta, grades;
+
+    _legend.onAdd = function (map) {          
+        this._div = L.DomUtil.create('div', 'info legend');
+        this.update();      
+        return this._div;
+    };
+
+    _legend.update = function () {    
+
+        //**Dirty hack** Display legend only when all dc charts are cycled through
+        numCharts++;
+
+        if (numCharts == 2) {
+          minValue = _chart.colorDomain()[0];
+          maxValue = _chart.colorDomain()[1];
+          palette = _chart.colors().range();
+          colorLength = _chart.colors().range().length;
+          delta = (maxValue - minValue)/colorLength;             
+
+          //define grades for legend colours
+          //based on equation in dc.js colorCalculator (before verion based on colorMixin)
+          grades = [];
+          grades[0] = minValue;
+          for (var i= 1; i < colorLength; i++) {
+            grades[i] = Math.round((0.5 + (i - 1)) * delta + minValue);
+          }          
+          
+          var div = L.DomUtil.create('div', 'info legend'),          
+              labels = [];            
+
+          // loop through our density intervals and generate a label with a colored square for each interval
+          for (var i = 0; i < grades.length; i++) {
+              this._div.innerHTML +=
+                  '<i style="background:' + palette[i] + '"></i> ' +
+                  grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+          }
+        }    
+    };
+        
+    //###################################
+
+
     var _tiles=function(map) {
         L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
+        }).addTo(map);        
     };
 
     _chart.createLeaflet = function(_) {
@@ -63,7 +109,7 @@ dc_leaflet.leafletBase = function(_chart) {
         return _chart;
     };
 
-    _chart._doRender = function() {
+    _chart._doRender = function() {        
         _map = _createLeaflet(_chart.root());
         for(var ev in _cachedHandlers)
             _map.on(ev, _cachedHandlers[ev]);
@@ -73,11 +119,19 @@ dc_leaflet.leafletBase = function(_chart) {
         }
 
         _chart.tiles()(_map);
+        
+        _chart.legend().addTo(_map);
 
         _chart._postRender();
 
         return _chart._doRedraw();
     };
+
+    _chart.legend = function(_) {
+        if (!arguments.length) return _legend;
+        _legend = _;
+        return _chart;
+    }
 
     _chart._postRender = function() {
         //abstract
@@ -450,7 +504,7 @@ dc_leaflet.choroplethChart = function(parent, chartGroup) {
         return options;
     };
 
-    var _popup = function(d,feature) {
+    var _popup = function(d,feature) {        
         return _chart.title()(d);
     };
 
@@ -469,6 +523,8 @@ dc_leaflet.choroplethChart = function(parent, chartGroup) {
             _dataMap[_chart.keyAccessor()(d)] = {'d':d,'i':i};
         });
         _geojsonLayer.addData(_chart.geojson());
+
+        _chart.legend().update();
     };
 
     _chart.geojson = function(_) {
@@ -531,10 +587,12 @@ dc_leaflet.choroplethChart = function(parent, chartGroup) {
         var v = _dataMap[_chart.featureKeyAccessor()(feature)];
         if (v && v.d) {
             layer.key=v.d.key;
-            if (_chart.renderPopup())
+            if (_chart.renderPopup()) {                
                 layer.bindPopup(_chart.popup()(v.d,feature));
-            if (_chart.brushOn())
+            }
+            if (_chart.brushOn()) {                
                 layer.on("click",selectFilter);
+            }
         }
     };
 
