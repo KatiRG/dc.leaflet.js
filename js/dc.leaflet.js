@@ -49,7 +49,9 @@ dc_leaflet.leafletBase = function(_chart) {
         return L.map(child_div.node(),_mapOptions);
     };
 
-    //######################
+    //======================================================================
+    //Legend code adapted from http://leafletjs.com/examples/choropleth.html
+
     var _legend = L.control({position: 'bottomleft'});  
     var numCharts = 0;
     var minValue, maxValue, palette, colorLength, delta, grades;
@@ -65,7 +67,7 @@ dc_leaflet.leafletBase = function(_chart) {
         //**Dirty hack** Display legend only when all dc charts are cycled through
         numCharts++;
 
-        if (numCharts == 2) {
+        if (numCharts == 2) {        
           minValue = _chart.colorDomain()[0];
           maxValue = _chart.colorDomain()[1];
           palette = _chart.colors().range();
@@ -90,9 +92,8 @@ dc_leaflet.leafletBase = function(_chart) {
                   grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
           }
         }    
-    };
-        
-    //###################################
+    };        
+    //======================================================================
 
 
     var _tiles=function(map) {
@@ -587,12 +588,10 @@ dc_leaflet.choroplethChart = function(parent, chartGroup) {
         var v = _dataMap[_chart.featureKeyAccessor()(feature)];
         if (v && v.d) {
             layer.key=v.d.key;
-            if (_chart.renderPopup()) {                
-                layer.bindPopup(_chart.popup()(v.d,feature));
-            }
-            if (_chart.brushOn()) {                
+            if (_chart.renderPopup())
+                layer.bindPopup(_chart.popup()(v.d,feature));            
+            if (_chart.brushOn())
                 layer.on("click",selectFilter);
-            }
         }
     };
 
