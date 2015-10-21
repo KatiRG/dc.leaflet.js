@@ -52,8 +52,8 @@ dc_leaflet.leafletBase = function(_chart) {
     //======================================================================
     //Legend code adapted from http://leafletjs.com/examples/choropleth.html
 
-    var _legend = L.control({position: 'bottomleft'});  
-    var numCharts = 0;
+    var _legend = L.control({position: 'bottomleft'});
+    var _colorDomain;
     var minValue, maxValue, palette, colorLength, delta, grades;
 
     _legend.onAdd = function (map) {          
@@ -61,37 +61,33 @@ dc_leaflet.leafletBase = function(_chart) {
         this.update();      
         return this._div;
     };
+    _legend.update = function () {
+        if (_chart.colorDomain()) {//check because undefined for marker charts        
+            minValue = _chart.colorDomain()[0];
+            maxValue = _chart.colorDomain()[1];
+            palette = _chart.colors().range();
+            colorLength = _chart.colors().range().length;
+            delta = (maxValue - minValue)/colorLength;             
 
-    _legend.update = function () {    
+            //define grades for legend colours
+            //based on equation in dc.js colorCalculator (before verion based on colorMixin)
+            grades = [];
+            grades[0] = minValue;
+            for (var i= 1; i < colorLength; i++) {
+                grades[i] = Math.round((0.5 + (i - 1)) * delta + minValue);
+            }          
+              
+            var div = L.DomUtil.create('div', 'info legend'),          
+                labels = [];            
 
-        //**Dirty hack** Display legend only when all dc charts are cycled through
-        numCharts++;
-
-        if (numCharts == 2) {        
-          minValue = _chart.colorDomain()[0];
-          maxValue = _chart.colorDomain()[1];
-          palette = _chart.colors().range();
-          colorLength = _chart.colors().range().length;
-          delta = (maxValue - minValue)/colorLength;             
-
-          //define grades for legend colours
-          //based on equation in dc.js colorCalculator (before verion based on colorMixin)
-          grades = [];
-          grades[0] = minValue;
-          for (var i= 1; i < colorLength; i++) {
-            grades[i] = Math.round((0.5 + (i - 1)) * delta + minValue);
-          }          
-          
-          var div = L.DomUtil.create('div', 'info legend'),          
-              labels = [];            
-
-          // loop through our density intervals and generate a label with a colored square for each interval
-          for (var i = 0; i < grades.length; i++) {
-              this._div.innerHTML +=
-                  '<i style="background:' + palette[i] + '"></i> ' +
-                  grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
-          }
-        }    
+            // loop through our density intervals and generate a label with a colored square for each interval
+            this._div.innerHTML = ""; //reset so that legend is not plotted multiple times
+            for (var i = 0; i < grades.length; i++) {
+                this._div.innerHTML +=
+                    '<i style="background:' + palette[i] + '"></i> ' +
+                      grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+            }
+        }
     };        
     //======================================================================
 
@@ -134,6 +130,11 @@ dc_leaflet.leafletBase = function(_chart) {
         return _chart;
     }
 
+    _chart.colorDomain = function(_) {
+        if (!arguments.length) return _colorDomain;
+        _colorDomain = _;
+        return _chart;
+    }
     _chart._postRender = function() {
         //abstract
     };
